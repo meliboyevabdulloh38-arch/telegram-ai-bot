@@ -122,7 +122,38 @@ Tabiiy javob ber.
         print("Telegram xatosi:", e)
 
 
+async def health_server():
+    port = int(os.environ.get("PORT", 10000))
+
+    async def handle(reader, writer):
+        response = (
+            "HTTP/1.1 200 OK\r\n"
+            "Content-Type: text/plain\r\n"
+            "Content-Length: 13\r\n"
+            "Connection: close\r\n"
+            "\r\n"
+            "Bot is alive!"
+        )
+
+        writer.write(response.encode())
+        await writer.drain()
+        writer.close()
+
+    server = await asyncio.start_server(
+        handle,
+        "0.0.0.0",
+        port
+    )
+
+    print(f"🌐 Server port {port} da ishlayapti!")
+
+    return server
+
+
 async def main():
+
+    # Render uchun port ochamiz
+    server = await health_server()
 
     app = ApplicationBuilder().token(
         TELEGRAM_TOKEN
@@ -158,6 +189,9 @@ async def main():
         await app.updater.stop()
         await app.stop()
         await app.shutdown()
+
+        server.close()
+        await server.wait_closed()
 
 
 asyncio.run(main())
