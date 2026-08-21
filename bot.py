@@ -1,4 +1,4 @@
-bot.pyimport os
+import os
 import asyncio
 
 from telegram import Update
