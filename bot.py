@@ -37,6 +37,24 @@ async def javob_ber(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.text:
         return
 
+    chat = update.effective_chat
+
+    # Guruhda bot faqat ADMIN bo'lsa ishlaydi
+    if chat.type in ["group", "supergroup"]:
+
+        try:
+            bot_member = await context.bot.get_chat_member(
+                chat.id,
+                context.bot.id
+            )
+
+            if bot_member.status not in ["administrator", "creator"]:
+                return
+
+        except Exception as e:
+            print("Admin tekshirish xatosi:", e)
+            return
+
     savol = update.message.text
     user_id = update.effective_user.id
     ism = update.effective_user.first_name or "Do‘stim"
@@ -97,7 +115,7 @@ Tabiiy javob ber.
                     xotira[user_id] = xotira[user_id][-MAX_XOTIRA:]
 
                 await context.bot.send_message(
-                    chat_id=update.effective_chat.id,
+                    chat_id=chat.id,
                     text=javob
                 )
 
@@ -113,7 +131,7 @@ Tabiiy javob ber.
     try:
 
         await context.bot.send_message(
-            chat_id=update.effective_chat.id,
+            chat_id=chat.id,
             text="😅 Hozir AI biroz band. Yana yozib ko‘ring."
         )
 
@@ -123,9 +141,11 @@ Tabiiy javob ber.
 
 
 async def health_server():
+
     port = int(os.environ.get("PORT", 10000))
 
     async def handle(reader, writer):
+
         response = (
             "HTTP/1.1 200 OK\r\n"
             "Content-Type: text/plain\r\n"
@@ -152,7 +172,6 @@ async def health_server():
 
 async def main():
 
-    # Render uchun port ochamiz
     server = await health_server()
 
     app = ApplicationBuilder().token(
