@@ -28,13 +28,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_text = update.message.text
     try:
-        # Yangi va mutlaqo bepul Gemini 2.0 modeli
-        model = genai.GenerativeModel("gemini-2.0-flash")
+        # Hozirgi rasmiy faol model
+        model = genai.GenerativeModel("gemini-2.5-flash")
         response = model.generate_content(user_text)
         await update.message.reply_text(response.text)
     except Exception as e:
         print(f"Xato: {e}")
-        await update.message.reply_text(f"API Xatoligi: {str(e)[:100]}")
+        await update.message.reply_text(f"API Xatoligi: {str(e)}")
 
 def main():
     Thread(target=run_health_check_server, daemon=True).start()
