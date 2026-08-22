@@ -3,7 +3,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from threading import Thread
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
-from groq import Groq
+from google import genai
 
 # Web Server (Render faol turishi uchun)
 class HealthCheckHandler(BaseHTTPRequestHandler):
@@ -18,23 +18,26 @@ def run_health_check_server():
     server.serve_forever()
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
-groq_client = Groq(api_key=GROQ_API_KEY)
+# Gemini klienti
+ai_client = genai.Client(api_key=GEMINI_API_KEY)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Assalomu alaykum! Men AI botman. Savolingizni yozing!")
+    await update.message.reply_text("Assalomu alaykum! Men Gemini AI botman. Savolingizni yozing!")
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_text = update.message.text
-    
-    # Rasmiy tavsiya etilgan faol model
-    chat_completion = groq_client.chat.completions.create(
-        messages=[{"role": "user", "content": user_text}],
-        model="llama-3.3-70b-versatile",
-    )
-    reply = chat_completion.choices[0].message.content
-    await update.message.reply_text(reply)
+    try:
+        response = ai_client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=user_text,
+        )
+        reply = response.text
+        await update.message.reply_text(reply)
+    except Exception as e:
+        print(f"Xato: {e}")
+        await update.message.reply_text("Xatolik yuz berdi. Qaytadan urinib ko'ring.")
 
 def main():
     Thread(target=run_health_check_server, daemon=True).start()
