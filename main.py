@@ -29,15 +29,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_text = update.message.text
     try:
-        # Eng barqaror bepul model
-        model = genai.GenerativeModel("gemini-1.5-flash")
+        model = genai.GenerativeModel("gemini-1.5-flash-latest")
         response = model.generate_content(user_text)
         reply = response.text
         await update.message.reply_text(reply)
     except Exception as e:
         print(f"Xato: {e}")
-        # Asl xatolikni ko'rish uchun logga chiqarish
-        await update.message.reply_text(f"API Xatoligi: {str(e)[:100]}")
+        await update.message.reply_text("Xatolik yuz berdi. Qaytadan urinib ko'ring.")
 
 def main():
     Thread(target=run_health_check_server, daemon=True).start()
