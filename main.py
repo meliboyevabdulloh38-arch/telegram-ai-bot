@@ -28,8 +28,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_text = update.message.text
     try:
-        # Hozirgi rasmiy faol model
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        # Google tomonidan so'ralgan eng so'nggi va faol model
+        model = genai.GenerativeModel("gemini-3.6-flash")
         response = model.generate_content(user_text)
         await update.message.reply_text(response.text)
     except Exception as e:
