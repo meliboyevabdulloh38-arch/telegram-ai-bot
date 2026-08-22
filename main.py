@@ -28,19 +28,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_text = update.message.text
     try:
-        # Kalitingizga mos ishlaydigan modelni avtomatik tanlash
-        available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+        # Mavjud modellarni olish va prefiksni tozalash ('models/' qismini olib tashlash)
+        raw_models = [m.name.replace('models/', '') for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
         
-        # Pro yoki Flash modellarini qidirish
-        selected_model = None
-        for m in available_models:
-            if "flash" in m or "pro" in m:
-                selected_model = m
-                break
+        # Ro'yxatdan birinchi mos keladigan modelni tanlash
+        selected_model = raw_models[0] if raw_models else "gemini-1.5-flash"
         
-        if not selected_model and available_models:
-            selected_model = available_models[0]
-
         model = genai.GenerativeModel(selected_model)
         response = model.generate_content(user_text)
         await update.message.reply_text(response.text)
