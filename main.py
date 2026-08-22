@@ -20,7 +20,6 @@ def run_health_check_server():
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
-# Gemini sozlashi
 genai.configure(api_key=GEMINI_API_KEY)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -29,11 +28,22 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_text = update.message.text
     try:
-        # Hozirda 100% ishlaydigan va bepul rasmiy model
-        model = genai.GenerativeModel("gemini-1.5-pro")
+        # Kalitingizga mos ishlaydigan modelni avtomatik tanlash
+        available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+        
+        # Pro yoki Flash modellarini qidirish
+        selected_model = None
+        for m in available_models:
+            if "flash" in m or "pro" in m:
+                selected_model = m
+                break
+        
+        if not selected_model and available_models:
+            selected_model = available_models[0]
+
+        model = genai.GenerativeModel(selected_model)
         response = model.generate_content(user_text)
-        reply = response.text
-        await update.message.reply_text(reply)
+        await update.message.reply_text(response.text)
     except Exception as e:
         print(f"Xato: {e}")
         await update.message.reply_text(f"API Xatoligi: {str(e)[:100]}")
