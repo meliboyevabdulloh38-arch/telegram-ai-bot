@@ -3,7 +3,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from threading import Thread
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
-from google import genai
+import google.generativeai as genai
 
 # Web Server (Render faol turishi uchun)
 class HealthCheckHandler(BaseHTTPRequestHandler):
@@ -20,8 +20,9 @@ def run_health_check_server():
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
-# Gemini klienti
-ai_client = genai.Client(api_key=GEMINI_API_KEY)
+# Gemini sozlashi
+genai.configure(api_key=GEMINI_API_KEY)
+model = genai.GenerativeModel("gemini-1.5-flash")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Assalomu alaykum! Men Gemini AI botman. Savolingizni yozing!")
@@ -29,10 +30,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_text = update.message.text
     try:
-        response = ai_client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=user_text,
-        )
+        response = model.generate_content(user_text)
         reply = response.text
         await update.message.reply_text(reply)
     except Exception as e:
