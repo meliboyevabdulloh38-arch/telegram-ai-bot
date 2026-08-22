@@ -24,18 +24,19 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 genai.configure(api_key=GEMINI_API_KEY)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Assalomu alaykum! Men Gemini AI botman. Savolingizni yozing!")
+    await update.message.reply_text("Assalomu alaykum! Men eng so'nggi Gemini AI botman. Savolingizni yozing!")
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_text = update.message.text
     try:
-        model = genai.GenerativeModel("gemini-1.5-flash-latest")
+        # Eng so'nggi va tezkor Gemini modeli
+        model = genai.GenerativeModel("gemini-2.5-flash")
         response = model.generate_content(user_text)
         reply = response.text
         await update.message.reply_text(reply)
     except Exception as e:
         print(f"Xato: {e}")
-        await update.message.reply_text("Xatolik yuz berdi. Qaytadan urinib ko'ring.")
+        await update.message.reply_text(f"API Xatoligi: {str(e)[:100]}")
 
 def main():
     Thread(target=run_health_check_server, daemon=True).start()
