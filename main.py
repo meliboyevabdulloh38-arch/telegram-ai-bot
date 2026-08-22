@@ -27,14 +27,17 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_text = update.message.text
-    
-    # Xatolikni yashirmaymiz, to'g'ridan-to'g'ri chaqiramiz
-    chat_completion = groq_client.chat.completions.create(
-        messages=[{"role": "user", "content": user_text}],
-        model="llama-3.1-8b-instant",
-    )
-    reply = chat_completion.choices[0].message.content
-    await update.message.reply_text(reply)
+    try:
+        # Ishlaydigan aniq model nomi: llama3-8b-8192
+        chat_completion = groq_client.chat.completions.create(
+            messages=[{"role": "user", "content": user_text}],
+            model="llama3-8b-8192",
+        )
+        reply = chat_completion.choices[0].message.content
+        await update.message.reply_text(reply)
+    except Exception as e:
+        print(f"Xato: {e}")
+        await update.message.reply_text("Xatolik yuz berdi. Qaytadan urinib ko'ring.")
 
 def main():
     Thread(target=run_health_check_server, daemon=True).start()
