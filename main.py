@@ -1,26 +1,24 @@
 import os
-import logging
+import asyncio
 from http.server import HTTPServer, BaseHTTPRequestHandler
-import threading
+from threading import Thread
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 from groq import Groq
 
-# 1. Render o'chib qolmasligi uchun mini veb-server
-class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
+# Web Server Render o'chib qolmasligi uchun
+class HealthCheckHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
         self.end_headers()
-        self.wfile.write(b"Bot ishlayapti!")
+        self.wfile.write(b"OK")
 
-def run_web_server():
+def run_health_check_server():
     port = int(os.environ.get("PORT", 10000))
-    server = HTTPServer(('0.0.0.0', port), SimpleHTTPRequestHandler)
+    server = HTTPServer(("0.0.0.0", port), HealthCheckHandler)
     server.serve_forever()
 
-threading.Thread(target=run_web_server, daemon=True).start()
-
-# 2. Telegram Bot va Groq AI kodi
+# API Keylarni olish
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 
@@ -32,19 +30,27 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_text = update.message.text
     try:
-        response = groq_client.chat.completions.create(
-            model="llama3-8b-8192",
-            messages=[{"role": "user", "content": user_text}]
+        # Hozirda ishlaydigan aniq model: llama-3.1-8b-instant
+        chat_completion = groq_client.chat.completions.create(
+            messages=[
+                {"role": "user", "content": user_text}
+            ],
+            model="llama-3.1-8b-instant",
         )
-        ai_reply = response.choices[0].message.content
-        await update.message.reply_text(ai_reply)
+        reply = chat_completion.choices[0].message.content
+        await update.message.reply_text(reply)
     except Exception as e:
+        print(f"Xato: {e}")
         await update.message.reply_text("Xatolik yuz berdi. Qaytadan urinib ko'ring.")
 
 def main():
+    Thread(target=run_health_check_server, daemon=True).start()
+    
     app = Application.builder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    
+    print("Bot ishga tushdi...")
     app.run_polling()
 
 if __name__ == "__main__":
